@@ -7,22 +7,27 @@
 const hre = require("hardhat");
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const unlockTime = currentTimestampInSeconds + 60;
+  const NAME = 'Token';
+  const SYMBOL = 'TOK';
+  const TOKENS_MAX = '1000000';
+  const PRICE = hre.ethers.utils.parseUnits('0.025', 'ether');
 
-  const lockedAmount = hre.ethers.parseEther("0.001");
+  // Deploying the Token Contract.
+  const TokenContractFactory = await hre.ethers.getContractFactory('Token');
+  const TokenContract = await TokenContractFactory.deploy(NAME, SYMBOL, TOKENS_MAX);
+  await TokenContract.deployed();
+  console.log(`\nThe Token Contract deployed at ${TokenContract.address}.\n`);
 
-  const lock = await hre.ethers.deployContract("Lock", [unlockTime], {
-    value: lockedAmount,
-  });
+  // Deploying the Crowdfunding Contract.
+  const CrowdfundingContractFactory = await hre.ethers.getContractFactory('Crowdfunding');
+  const CrowdfundingContract = await CrowdfundingContractFactory.deploy(TokenContract.address, PRICE, hre.ethers.utils.parseUnits(TOKENS_MAX, 'ether'));
+  await CrowdfundingContract.deployed();
+  console.log(`\nThe Crowdfunding Contract deployed at ${CrowdfundingContract.address}.\n`);
 
-  await lock.waitForDeployment();
-
-  console.log(
-    `Lock with ${ethers.formatEther(
-      lockedAmount
-    )}ETH and unlock timestamp ${unlockTime} deployed to ${lock.target}`
-  );
+  // Seeding Tokens into the Crowdfunding Contract.
+  const transaction = await TokenContract.transfer(CrowdfundingContract.address, hre.ethers.utils.parseUnits(TOKENS_MAX, 'ether'));
+  await transaction.wait();
+  console.log(`\nTokens seeded into the Crowdfunding Contract.\n`);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
