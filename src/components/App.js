@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
+import { ethers } from 'ethers';
+import { Container } from 'react-bootstrap';
+
+// Components.
+import Buy from './Buy';
 import Info from './Info';
 import Navigation from './Navigation';
 import Loading from './Loading';
 import Progress from './Progress';
-import { ethers } from 'ethers';
-import { Container } from 'react-bootstrap';
 
 // Application Binary Interfaces.
 import CrowdfundingAbi from '../abis/Crowdfunding.json';
@@ -17,18 +20,21 @@ function App() {
   const [account, setAccount] = useState(null);
   const [accountBalance, setAccountBalance] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [provider, setProvider] = useState(null);
 
   // Contract states.
+  const [crowdfunding, setCrowdfunding] = useState(null);
   const [price, setPrice] = useState(0);
   const [maxTokens, setMaxTokens] = useState(0);
   const [tokensSold, setTokensSold] = useState(0);
 
   const loadBlockchainData = async () => {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
+    setProvider(provider);
     const { chainId } = await provider.getNetwork()
 
     const CrowdfundingContract = new ethers.Contract(config[chainId].crowdfunding.address, CrowdfundingAbi, provider);
-    console.log(CrowdfundingContract.address);
+    setCrowdfunding(CrowdfundingContract);
     const TokenContract = new ethers.Contract(config[chainId].token.address, TokenAbi, provider);
     console.log(TokenContract.address);
 
@@ -68,6 +74,7 @@ function App() {
       ) : (
         <>
           <p className='text-center'><strong>Current Price:</strong> {price} Ethers (ETH)</p>
+          <Buy provider={provider} price={price} crowdfunding={crowdfunding} setIsLoading={setIsLoading}/>
           <Progress maxTokens={maxTokens} tokensSold={tokensSold} />
         </>
       )}
