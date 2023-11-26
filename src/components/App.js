@@ -16,23 +16,19 @@ import config from '../config.json';
 function App() {
   const [account, setAccount] = useState(null);
   const [accountBalance, setAccountBalance] = useState(0);
-  const [provider, setProvider] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Contract states.
-  const [crowdfunding, setCrowdfunding] = useState(null);
   const [price, setPrice] = useState(0);
   const [maxTokens, setMaxTokens] = useState(0);
   const [tokensSold, setTokensSold] = useState(0);
 
   const loadBlockchainData = async () => {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
-    setProvider(provider);
     const { chainId } = await provider.getNetwork()
 
     const CrowdfundingContract = new ethers.Contract(config[chainId].crowdfunding.address, CrowdfundingAbi, provider);
     console.log(CrowdfundingContract.address);
-    setCrowdfunding(CrowdfundingContract);
     const TokenContract = new ethers.Contract(config[chainId].token.address, TokenAbi, provider);
     console.log(TokenContract.address);
 
